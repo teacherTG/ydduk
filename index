@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>엽떡 학급 주문 앱</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        yup: {
+                            light: '#ff7676',
+                            DEFAULT: '#e53935',
+                            dark: '#b71c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f9fafb; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #e53935; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b71c1c; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        /* Toast Animation */
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .toast {
+            animation: slideInUp 0.3s ease-out forwards;
+        }
+        .toast.hide {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        
+        /* Active Tab indicator */
+        .tab-active {
+            border-bottom: 3px solid #e53935;
+            color: #e53935;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col pb-24 md:pb-0">
+
+    <!-- Header -->
+    <header class="bg-yup text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-pepper-hot"></i> 학급 엽떡 주문서
+            </h1>
+            <div class="flex bg-yup-dark rounded-lg p-1 overflow-hidden">
+                <button id="nav-student" class="px-4 py-1.5 md:px-6 md:py-2 text-sm md:text-base font-semibold rounded-md bg-white text-yup transition-colors" onclick="switchView('student')">
+                    학생 (주문)
+                </button>
+                <button id="nav-teacher" class="px-4 py-1.5 md:px-6 md:py-2 text-sm md:text-base font-semibold rounded-md text-white hover:bg-white/20 transition-colors" onclick="switchView('teacher')">
+                    교사 (확인)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-6 relative">
+        
+        <!-- ================= STUDENT VIEW ================= -->
+        <div id="view-student" class="space-y-6 block">
+            
+            <!-- Student Selector -->
+            <div class="glass-panel p-5 rounded-2xl">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">1. 우리 조 학생 선택</label>
+                    <p class="text-xs text-gray-500 mb-3">우리 조 학생들의 번호를 모두 골라주세요. 이미 주문을 완료한 다른 조의 번호는 회색으로 비활성화됩니다.</p>
+                    <div id="student-grid" class="grid grid-cols-5 md:grid-cols-7 gap-2">
+                        <!-- Student buttons will be rendered here -->
+                    </div>
+                </div>
+                <div id="leader-selection" class="hidden border-t border-gray-100 pt-4 mt-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">2. 조장 체크 👑</label>
+                    <p class="text-xs text-gray-500 mb-3">누가 조장인지 체크해주세요. (조장 번호가 우리 조 이름이 됩니다)</p>
+                    <div id="leader-grid" class="flex flex-wrap gap-2">
+                        <!-- Leader buttons will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Category Tabs -->
+            <div class="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 pb-2 gap-4 hide-scrollbar" id="category-tabs">
+                <!-- Tabs will be rendered here -->
+            </div>
+
+            <!-- Menu Grid -->
+            <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-32">
+                <!-- Menu items will be rendered here -->
+            </div>
+
+            <!-- Floating Cart / Bottom Bar for Mobile -->
+            <div class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-30 border-t border-gray-200 md:bottom-6 md:left-auto md:right-6 md:w-96 md:rounded-2xl md:border md:shadow-2xl transition-transform duration-300 transform translate-y-0">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-3 cursor-pointer md:cursor-default" onclick="toggleMobileCart()">
+                        <h3 class="font-bold text-lg"><i class="fa-solid fa-cart-shopping text-yup mr-2"></i>우리 조 장바구니</h3>
+                        <span id="cart-item-count" class="bg-yup text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
+                    </div>
+                    
+                    <!-- Cart Items Container (Hidden on mobile by default, toggled via click) -->
+                    <div id="cart-items" class="hidden md:block max-h-48 overflow-y-auto mb-4 space-y-2 pr-2">
+                        <!-- Cart items injected here -->
+                        <div class="text-center text-gray-400 py-4 text-sm" id="empty-cart-msg">담은 메뉴가 없습니다.</div>
+                    </div>
+
+                    <div class="flex justify-between items-end border-t border-gray-100 pt-3 mb-4">
+                        <span class="text-sm text-gray-500 font-medium">총 주문 금액</span>
+                        <span class="text-2xl font-black text-yup" id="cart-total-price">0원</span>
+                    </div>
+                    
+                    <button onclick="submitOrder()" class="w-full bg-yup hover:bg-yup-dark text-white font-bold py-3.5 rounded-xl transition-colors shadow-md flex justify-center items-center gap-2 text-lg">
+                        <i class="fa-solid fa-paper-plane"></i> 선생님께 주문 전송
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TEACHER VIEW ================= -->
+        <div id="view-teacher" class="space-y-6 hidden">
+            
+            <!-- Dashboard Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">학급 주문 현황</h2>
+                    <p class="text-gray-500 mt-1" id="order-count-text">현재 0개의 조가 주문을 완료했습니다.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500 font-medium mb-1">학급 총 결제 예정 금액</p>
+                    <p class="text-3xl font-black text-yup" id="grand-total-price">0원</p>
+                </div>
+            </div>
+
+            <!-- Orders Grid -->
+            <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Orders will be rendered here -->
+            </div>
+
+            <!-- Reset Button for Teacher -->
+            <div class="text-right mt-10">
+                <button onclick="clearAllOrders()" class="text-sm text-red-500 hover:text-red-700 underline decoration-red-500 underline-offset-4">
+                    <i class="fa-solid fa-trash-can mr-1"></i>모든 주문 기록 초기화
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Custom Modal/Toast Container -->
+    <div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 w-[90%] max-w-sm"></div>
+
+    <!-- Firebase & JS Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment Variables Handling
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'yupdduk-class-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Mock config will fail if used, but handles undefined errors
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+        let unsubscribeOrders = null;
+
+        // Data Definition (엽떡 메뉴 - 2026 기준 검색 반영)
+        const MENU_DATA = [
+            // 메인 메뉴
+            { id: 'm1', category: '메인', name: '엽기떡볶이', price: 14000, spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            { id: 'm2', category: '메인', name: '로제떡볶이', price: 16000, spicy: ['착한맛', '오리지널'] },
+            { id: 'm3', category: '메인', name: '마라떡볶이', price: 16000, spicy: ['착한맛', '오리지널'] },
+            { id: 'm4', category: '메인', name: '마라로제떡볶이', price: 18000, spicy: ['착한맛', '오리지널'] },
+            { id: 'm5', category: '메인', name: '2인 엽기떡볶이', price: 9000, spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            
+            // 세트 메뉴
+            { id: 's1', category: '세트', name: '실속세트', price: 17500, desc: '엽떡+주먹김밥+모둠튀김', spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            { id: 's2', category: '세트', name: '베스트세트', price: 20000, desc: '실속세트+중국당면', spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            { id: 's3', category: '세트', name: '스페셜세트', price: 25000, desc: '베스트세트+엽봉', spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            
+            // 사이드
+            { id: 'sd1', category: '사이드', name: '주먹김밥(셀프)', price: 2000 },
+            { id: 'sd2', category: '사이드', name: '참치마요밥', price: 3500, img: 'https://images.unsplash.com/photo-1555513813-f66fbfd639b5?q=80&w=200&auto=format&fit=crop' },
+            { id: 'sd3', category: '사이드', name: '계란찜', price: 2000, img: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=200&auto=format&fit=crop' },
+            { id: 'sd4', category: '사이드', name: '모둠튀김', price: 2000, img: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?q=80&w=200&auto=format&fit=crop' },
+            { id: 'sd5', category: '사이드', name: '꿔바로우(5개)', price: 5900, img: 'https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?q=80&w=200&auto=format&fit=crop' },
+            { id: 'sd6', category: '사이드', name: '엽도그', price: 2000, img: 'https://images.unsplash.com/photo-1628198622831-29177112d093?q=80&w=200&auto=format&fit=crop' },
+            
+            // 토핑 (가격 업데이트)
+            { id: 't1', category: '토핑', name: '모짜치즈', price: 3000, img: 'https://images.unsplash.com/photo-1481070555726-e2fe8357725c?q=80&w=200&auto=format&fit=crop' },
+            { id: 't2', category: '토핑', name: '중국당면', price: 2500, img: 'https://images.unsplash.com/photo-1598514982205-f36b96d1e8dd?q=80&w=200&auto=format&fit=crop' },
+            { id: 't3', category: '토핑', name: '우동사리', price: 2000, img: 'https://images.unsplash.com/photo-1617093727343-374698b1b08d?q=80&w=200&auto=format&fit=crop' },
+            { id: 't4', category: '토핑', name: '베이컨', price: 3000, img: 'https://images.unsplash.com/photo-1528607929212-2636ec44253e?q=80&w=200&auto=format&fit=crop' },
+            { id: 't5', category: '토핑', name: '우삼겹', price: 3000, img: 'https://images.unsplash.com/photo-1603048297172-c92544798d5e?q=80&w=200&auto=format&fit=crop' },
+            { id: 't6', category: '토핑', name: '햄(7개)', price: 1000, img: 'https://images.unsplash.com/photo-1614961909013-1e2212a2ca87?q=80&w=200&auto=format&fit=crop' },
+            { id: 't7', category: '토핑', name: '메추리알(5개)', price: 1000, img: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=200&auto=format&fit=crop' }
+        ];
+
+        const CATEGORIES = ['전체', '메인', '세트', '사이드', '토핑'];
+        let activeCategory = '전체';
+        
+        // State
+        let cart = {}; // { cartKey: quantity } (cartKey = itemId or itemId::spicyOption)
+        let selectedSpicy = {}; // { itemId: '오리지널' }
+        let allOrders = []; // Fetched from Firestore
+        let selectedStudents = [];
+        let groupLeader = null;
+        let takenStudents = [];
+
+        // --- Student Selection Logic ---
+        function renderStudentSelector() {
+            const studentGrid = document.getElementById('student-grid');
+            const leaderSelection = document.getElementById('leader-selection');
+            const leaderGrid = document.getElementById('leader-grid');
+            
+            if(!studentGrid) return;
+
+            let studentHtml = '';
+            for(let i=1; i<=26; i++) {
+                const isTaken = takenStudents.includes(i);
+                const isSelected = selectedStudents.includes(i);
+                
+                let btnClass = "py-2 rounded-lg font-bold text-sm transition-all duration-200 border ";
+                if (isTaken) {
+                    btnClass += "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed";
+                } else if (isSelected) {
+                    btnClass += "bg-red-50 text-yup border-yup shadow-sm";
+                } else {
+                    btnClass += "bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400";
+                }
+
+                studentHtml += `<button onclick="toggleStudent(${i})" class="${btnClass}" ${isTaken ? 'disabled' : ''}>
+                    ${i}
+                </button>`;
+            }
+            studentGrid.innerHTML = studentHtml;
+
+            // Render leader selector if students are chosen
+            if (selectedStudents.length > 0) {
+                leaderSelection.classList.remove('hidden');
+                let leaderHtml = '';
+                selectedStudents.sort((a, b) => a - b).forEach(num => {
+                    const isLeader = groupLeader === num;
+                    leaderHtml += `<button onclick="setLeader(${num})" class="px-4 py-2 rounded-full font-bold text-sm transition-all duration-200 border ${isLeader ? 'bg-yup text-white border-yup shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}">
+                        ${num}번 ${isLeader ? '👑' : ''}
+                    </button>`;
+                });
+                leaderGrid.innerHTML = leaderHtml;
+            } else {
+                leaderSelection.classList.add('hidden');
+            }
+        }
+
+        window.toggleStudent = function(num) {
+            if (selectedStudents.includes(num)) {
+                selectedStudents = selectedStudents.filter(n => n !== num);
+                // If leader was unselected, default to the first remaining student
+                if (groupLeader === num) groupLeader = selectedStudents.length > 0 ? selectedStudents[0] : null;
+            } else {
+                selectedStudents.push(num);
+                // If first student selected, make them leader automatically
+                if (!groupLeader) groupLeader = num;
+            }
+            renderStudentSelector();
+        }
+
+        window.setLeader = function(num) {
+            groupLeader = num;
+            renderStudentSelector();
+        }
+
+        
+        // --- Utilities ---
+        function formatPrice(price) {
+            return price.toLocaleString() + '원';
+        }
+
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-gray-800');
+            const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+            
+            toast.className = `toast ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.switchView = function(view) {
+            const studentView = document.getElementById('view-student');
+            const teacherView = document.getElementById('view-teacher');
+            const navStudent = document.getElementById('nav-student');
+            const navTeacher = document.getElementById('nav-teacher');
+
+            if(view === 'student') {
+                studentView.classList.remove('hidden');
+                studentView.classList.add('block');
+                teacherView.classList.remove('block');
+                teacherView.classList.add('hidden');
+                
+                navStudent.classList.replace('text-white', 'text-yup');
+                navStudent.classList.replace('hover:bg-white/20', 'bg-white');
+                navTeacher.classList.replace('text-yup', 'text-white');
+                navTeacher.classList.replace('bg-white', 'hover:bg-white/20');
+            } else {
+                studentView.classList.remove('block');
+                studentView.classList.add('hidden');
+                teacherView.classList.remove('hidden');
+                teacherView.classList.add('block');
+                
+                navTeacher.classList.replace('text-white', 'text-yup');
+                navTeacher.classList.replace('hover:bg-white/20', 'bg-white');
+                navStudent.classList.replace('text-yup', 'text-white');
+                navStudent.classList.replace('bg-white', 'hover:bg-white/20');
+                
+                // Fetch data when opening teacher view
+                if(currentUser && !unsubscribeOrders) {
+                    startListeningToOrders();
+                }
+            }
+        }
+
+        window.toggleMobileCart = function() {
+            if(window.innerWidth >= 768) return; // Only apply on mobile
+            const cartItems = document.getElementById('cart-items');
+            if (cartItems.classList.contains('hidden')) {
+                cartItems.classList.remove('hidden');
+            } else {
+                cartItems.classList.add('hidden');
+            }
+        }
+
+        
+        // --- Student View Logic ---
+        function renderCategoryTabs() {
+            const container = document.getElementById('category-tabs');
+            container.innerHTML = '';
+            
+            CATEGORIES.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `px-5 py-2 rounded-full text-sm font-semibold transition-colors ${activeCategory === cat ? 'bg-yup text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`;
+                btn.innerText = cat;
+                btn.onclick = () => {
+                    activeCategory = cat;
+                    renderCategoryTabs();
+                    renderMenu();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-grid');
+            container.innerHTML = '';
+            
+            const filteredMenu = activeCategory === '전체' 
+                ? MENU_DATA 
+                : MENU_DATA.filter(item => item.category === activeCategory);
+
+            filteredMenu.forEach(item => {
+                // 특정 메뉴의 장바구니에 담긴 총 수량 계산 (맵기 상관없이 전체 수량)
+                let itemTotalQty = 0;
+                Object.keys(cart).forEach(k => {
+                    if (k === item.id || k.startsWith(item.id + '::')) {
+                        itemTotalQty += cart[k];
+                    }
+                });
+                
+                const itemTotal = item.price * (itemTotalQty > 0 ? itemTotalQty : 1);
+                
+                // 맵기 선택 드롭다운 HTML 생성
+                let spicyHtml = '';
+                if (item.spicy) {
+                    if (!selectedSpicy[item.id]) selectedSpicy[item.id] = item.spicy[0]; // 기본값 세팅
+                    let options = item.spicy.map(opt => 
+                        `<option value="${opt}" ${selectedSpicy[item.id] === opt ? 'selected' : ''}>${opt}</option>`
+                    ).join('');
+                    spicyHtml = `
+                        <div class="mt-2 mb-1">
+                            <select onchange="changeSpicy('${item.id}', this.value)" class="w-full bg-red-50 border border-red-100 text-yup-dark text-sm rounded-lg focus:ring-yup focus:border-yup block p-2 font-medium outline-none">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 p-5 flex flex-col justify-between border border-gray-200 bg-white';
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg text-gray-800 leading-tight">${item.name}</h3>
+                            <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-md">${item.category}</span>
+                        </div>
+                        ${item.desc ? `<p class="text-sm text-gray-500 mb-2">${item.desc}</p>` : ''}
+                        ${spicyHtml}
+                    </div>
+                    <div class="mt-4 flex justify-between items-end border-t border-gray-100 pt-4">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-400 font-medium">기본 단가: ${formatPrice(item.price)}</span>
+                            <span class="font-black text-yup text-xl mt-1">${formatPrice(itemTotal)}</span>
+                        </div>
+                        
+                        <div class="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200 shadow-sm">
+                            <button onclick="updateCartFromMenu('${item.id}', -1)" class="w-9 h-9 rounded-lg bg-white shadow-sm text-gray-600 hover:text-yup hover:bg-red-50 transition-colors flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-minus text-sm"></i>
+                            </button>
+                            <span class="w-10 text-center font-black text-gray-800 text-lg">${itemTotalQty}</span>
+                            <button onclick="updateCartFromMenu('${item.id}', 1)" class="w-9 h-9 rounded-lg bg-white shadow-sm text-gray-600 hover:text-yup hover:bg-red-50 transition-colors flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.changeSpicy = function(itemId, value) {
+            selectedSpicy[itemId] = value;
+        }
+
+        window.updateCartFromMenu = function(itemId, change) {
+            const item = MENU_DATA.find(m => m.id === itemId);
+            let cartKey = itemId;
+            
+            // 맵기 옵션이 있는 메뉴라면 현재 선택된 맵기를 키에 포함
+            if (item && item.spicy) {
+                const spicyValue = selectedSpicy[itemId] || item.spicy[0];
+                cartKey = `${itemId}::${spicyValue}`;
+            }
+            
+            // 마이너스(-)를 누를 때, 현재 콤보박스의 맵기 수량이 0이라면 
+            // 다른 맵기로 담긴 수량이 있는지 찾아 우선적으로 빼줌 (편의 기능)
+            if (change < 0 && (!cart[cartKey] || cart[cartKey] === 0)) {
+                const availableKey = Object.keys(cart).find(k => k.startsWith(itemId + '::') && cart[k] > 0);
+                if (availableKey) cartKey = availableKey;
+            }
+
+            updateCart(cartKey, change);
+        }
+
+        window.updateCart = function(cartKey, change) {
+            const currentQty = Number(cart[cartKey]) || 0;
+            const newQty = currentQty + Number(change);
+            
+            if (newQty > 0) {
+                cart[cartKey] = newQty;
+            } else {
+                delete cart[cartKey];
+            }
+            
+            // 장바구니 데이터를 업데이트한 후 UI를 다시 그립니다.
+            renderMenu(); 
+            renderCart(); 
+        }
+
+        function renderCart() {
+            const cartContainer = document.getElementById('cart-items');
+            const countBadge = document.getElementById('cart-item-count');
+            const totalEl = document.getElementById('cart-total-price');
+            
+            let total = 0;
+            let itemCount = 0;
+            let html = '';
+
+            const cartKeys = Object.keys(cart);
+            
+            if (cartKeys.length === 0) {
+                html = '<div class="text-center text-gray-400 py-4 text-sm" id="empty-cart-msg">담은 메뉴가 없습니다.</div>';
+            } else {
+                cartKeys.forEach(cartKey => {
+                    const [id, spicyOption] = cartKey.split('::');
+                    const item = MENU_DATA.find(m => m.id === id);
+                    
+                    if (item) { 
+                        const qty = Number(cart[cartKey]); // 확실하게 숫자로 변환
+                        const itemTotal = item.price * qty; // 단가 X 수량 계산
+                        total += itemTotal; // 총액에 더하기
+                        itemCount += qty; // 장바구니 뱃지 숫자에도 더하기
+
+                        html += `
+                            <div class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-700">${item.name} ${spicyOption ? `<span class="text-yup text-xs font-bold ml-1">[${spicyOption}]</span>` : ''}</span>
+                                    <span class="text-xs text-gray-500">${formatPrice(item.price)} x ${qty}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="font-bold text-gray-800">${formatPrice(itemTotal)}</span>
+                                    <button onclick="updateCart('${cartKey}', -${qty})" class="text-red-400 hover:text-red-600 transition-colors">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            // 루프가 끝난 뒤 누적된 최종 금액과 갯수를 하단 장바구니 바에 업데이트
+            cartContainer.innerHTML = html;
+            countBadge.innerText = itemCount;
+            totalEl.innerText = formatPrice(total);
+        }
+        
+        window.submitOrder = async function() {
+            if (!currentUser) {
+                showToast('서버 연결 중입니다. 잠시만 기다려주세요.', 'error');
+                return;
+            }
+
+            if (selectedStudents.length === 0) {
+                showToast('우리 조 학생을 먼저 선택해주세요.', 'error');
+                return;
+            }
+
+            if (!groupLeader) {
+                showToast('조장을 체크해주세요.', 'error');
+                return;
+            }
+
+            const cartKeys = Object.keys(cart);
+            if (cartKeys.length === 0) {
+                showToast('장바구니가 비어있습니다. 메뉴를 선택해주세요.', 'error');
+                return;
+            }
+
+            // Prepare order data
+            let totalPrice = 0;
+            const items = cartKeys.map(cartKey => {
+                const [id, spicyOption] = cartKey.split('::');
+                const item = MENU_DATA.find(m => m.id === id);
+                const qty = cart[cartKey];
+                totalPrice += item.price * qty;
+                return {
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: qty,
+                    category: item.category,
+                    spicy: spicyOption || null
+                };
+            });
+
+            const groupName = `${groupLeader}번 조`;
+
+            const orderData = {
+                groupName: groupName,
+                leader: groupLeader,
+                members: selectedStudents,
+                items: items,
+                totalPrice: totalPrice,
+                timestamp: Date.now()
+            };
+
+            try {
+                // Rule 1: Use specific path. Document ID is groupLeader
+                const safeDocId = `order_${groupLeader}`;
+                const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', safeDocId);
+                
+                await setDoc(orderRef, orderData);
+                
+                showToast('선생님께 주문이 성공적으로 전송되었습니다!', 'success');
+                
+            } catch (error) {
+                console.error("Order submit error:", error);
+                showToast('주문 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+            }
+        }
+
+        // --- Teacher View Logic ---
+        function startListeningToOrders() {
+            if (unsubscribeOrders) return; // already listening
+
+            const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+            
+            // Rule 2 & 3: Simple query, Auth already guaranteed by flow
+            unsubscribeOrders = onSnapshot(ordersCollection, (snapshot) => {
+                allOrders = [];
+                takenStudents = [];
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allOrders.push({ id: doc.id, ...data });
+                    if (data.members) {
+                        takenStudents.push(...data.members);
+                    }
+                });
+                
+                // Sort by timestamp descending in memory (Rule 2)
+                allOrders.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Auto-remove taken students from current selection if another group grabbed them
+                selectedStudents = selectedStudents.filter(n => !takenStudents.includes(n));
+                if (groupLeader && !selectedStudents.includes(groupLeader)) {
+                    groupLeader = selectedStudents.length > 0 ? selectedStudents[0] : null;
+                }
+                
+                renderStudentSelector();
+                renderTeacherDashboard();
+            }, (error) => {
+                console.error("Error listening to orders: ", error);
+                showToast("주문 목록을 실시간으로 불러오는데 실패했습니다.", "error");
+            });
+        }
+
+        function renderTeacherDashboard() {
+            const container = document.getElementById('orders-container');
+            const countText = document.getElementById('order-count-text');
+            const grandTotalEl = document.getElementById('grand-total-price');
+            
+            container.innerHTML = '';
+            
+            if (allOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
+                        <i class="fa-solid fa-clipboard-list text-6xl mb-4 text-gray-200"></i>
+                        <p class="text-lg">아직 접수된 주문이 없습니다.</p>
+                    </div>
+                `;
+                countText.innerText = '현재 0개의 조가 주문을 완료했습니다.';
+                grandTotalEl.innerText = '0원';
+                return;
+            }
+
+            let grandTotal = 0;
+
+            allOrders.forEach(order => {
+                grandTotal += order.totalPrice;
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative overflow-hidden group';
+                
+                // Top decoration line
+                const dec = document.createElement('div');
+                dec.className = 'absolute top-0 left-0 w-full h-1 bg-yup';
+                card.appendChild(dec);
+
+                const timeString = new Date(order.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute:'2-digit' });
+
+                let itemsHtml = order.items.map(item => `
+                    <div class="flex justify-between items-center text-sm border-b border-gray-50 py-2 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium">${item.category}</span>
+                            <span class="font-bold text-gray-700">${item.name} ${item.spicy ? `<span class="text-yup text-xs font-normal ml-1">(${item.spicy})</span>` : ''}</span>
+                        </div>
+                        <span class="font-medium bg-red-50 text-yup px-2 py-0.5 rounded-md">${item.quantity}개</span>
+                    </div>
+                `).join('');
+
+                card.innerHTML += `
+                    <div class="flex justify-between items-end mb-2">
+                        <h3 class="text-xl font-black text-gray-800">${order.groupName}</h3>
+                        <span class="text-xs text-gray-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>${timeString}</span>
+                    </div>
+                    <div class="mb-4">
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-medium">조원: ${order.members ? order.members.map(m => m + '번').join(', ') : '알 수 없음'}</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 mb-4 space-y-1">
+                        ${itemsHtml}
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <span class="text-sm font-bold text-gray-500">합계</span>
+                        <span class="text-xl font-black text-yup">${formatPrice(order.totalPrice)}</span>
+                    </div>
+                    <button onclick="deleteOrder('${order.id}')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+
+            countText.innerText = `현재 ${allOrders.length}개의 조가 주문을 완료했습니다.`;
+            grandTotalEl.innerText = formatPrice(grandTotal);
+        }
+
+        window.deleteOrder = async function(orderId) {
+            if(confirm("이 조의 주문을 삭제하시겠습니까?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
+                    showToast("주문이 삭제되었습니다.", "success");
+                } catch(e) {
+                    showToast("삭제 실패", "error");
+                }
+            }
+        };
+
+        window.clearAllOrders = async function() {
+            if(confirm("정말로 모든 주문 내역을 초기화하시겠습니까? (복구 불가)")) {
+                try {
+                    // Fetch all docs and delete them one by one
+                    const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+                    const snapshot = await getDocs(ordersCollection);
+                    const deletePromises = [];
+                    snapshot.forEach(document => {
+                        deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', document.id)));
+                    });
+                    await Promise.all(deletePromises);
+                    showToast("모든 주문이 초기화되었습니다.", "success");
+                } catch (e) {
+                    console.error(e);
+                    showToast("초기화 중 오류가 발생했습니다.", "error");
+                }
+            }
+        }
+
+        async function initApp() {
+            renderCategoryTabs();
+            renderMenu();
+            renderCart();
+            renderStudentSelector();
+
+            try {
+                // Rule 3: Auth before any queries
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                currentUser = auth.currentUser;
+                console.log("Authenticated as:", currentUser.uid);
+                
+                // Immediately start listening so students know which numbers are taken
+                startListeningToOrders();
+                
+            } catch (error) {
+                console.error("Auth Error:", error);
+                showToast("네트워크/서버 연결이 원활하지 않습니다. 주문 전송이 불가능할 수 있습니다.", "error");
+            }
+        }
+
+        // Start initialization on load
+        window.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
