@@ -189,15 +189,22 @@
 
         // Environment Variables Handling
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'yupdduk-class-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Mock config will fail if used, but handles undefined errors
-        };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Initialize Firebase Safely (깃허브 등 외부 환경에서 에러 방지)
+        let app, auth, db;
+        try {
+            if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+            } else {
+                console.warn("서버 설정(Firebase Config)이 없습니다. 화면 모드로 작동합니다.");
+            }
+        } catch (e) {
+            console.error("Firebase 초기화 에러:", e);
+        }
         
         let currentUser = null;
         let unsubscribeOrders = null;
@@ -549,6 +556,11 @@
         }
         
         window.submitOrder = async function() {
+            if (!db) {
+                showToast('서버(DB)가 연결되지 않아 주문을 전송할 수 없습니다. (단순 화면 확인 모드)', 'error');
+                return;
+            }
+
             if (!currentUser) {
                 showToast('서버 연결 중입니다. 잠시만 기다려주세요.', 'error');
                 return;
@@ -615,6 +627,7 @@
 
         // --- Teacher View Logic ---
         function startListeningToOrders() {
+            if (!db) return; // DB 연결이 안 되어 있으면 실시간 수신 생략
             if (unsubscribeOrders) return; // already listening
 
             const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
@@ -720,6 +733,7 @@
         }
 
         window.deleteOrder = async function(orderId) {
+            if (!db) return;
             if(confirm("이 조의 주문을 삭제하시겠습니까?")) {
                 try {
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
@@ -731,6 +745,7 @@
         };
 
         window.clearAllOrders = async function() {
+            if (!db) return;
             if(confirm("정말로 모든 주문 내역을 초기화하시겠습니까? (복구 불가)")) {
                 try {
                     // Fetch all docs and delete them one by one
@@ -754,6 +769,11 @@
             renderMenu();
             renderCart();
             renderStudentSelector();
+
+            if (!auth || !db) {
+                showToast("데이터베이스 연결 설정이 없어 주문 전송은 되지 않습니다.", "error");
+                return; // 서버 연결 시도를 건너뜀
+            }
 
             try {
                 // Rule 3: Auth before any queries
