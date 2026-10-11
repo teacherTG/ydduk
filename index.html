@@ -193,6 +193,19 @@
         </div>
     </div>
 
+    <!-- Password Modal UI -->
+    <div id="password-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-[90%] shadow-2xl transform scale-95 transition-transform duration-300" id="password-modal-content">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">교사 인증</h3>
+            <p class="text-gray-600 mb-4 text-sm">선생님 전용 페이지입니다.<br>비밀번호를 입력해주세요.</p>
+            <input type="password" id="teacher-password-input" class="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 mb-6 focus:ring-2 focus:ring-yup focus:border-yup outline-none" placeholder="비밀번호 입력">
+            <div class="flex justify-end gap-3">
+                <button onclick="closePasswordModal()" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors">취소</button>
+                <button onclick="checkPassword()" class="px-4 py-2 rounded-lg bg-yup text-white font-medium hover:bg-yup-dark transition-colors">확인</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase & JS Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -266,6 +279,8 @@
         let selectedStudents = [];
         let groupLeader = null;
         let takenStudents = [];
+        let isTeacherAuthenticated = false; // 교사 인증 상태 저장
+        const TEACHER_PASSWORD = "1234"; // 교사 비밀번호 설정 (원하시는 번호로 변경 가능)
 
         // --- 1. 학생 및 조장 선택 기능 ---
         function renderStudentSelector() {
@@ -372,7 +387,50 @@
             };
         }
 
+        window.closePasswordModal = function() {
+            const modal = document.getElementById('password-modal');
+            const content = document.getElementById('password-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('teacher-password-input').value = '';
+            }, 300);
+        }
+
+        window.checkPassword = function() {
+            const input = document.getElementById('teacher-password-input').value;
+            if (input === TEACHER_PASSWORD) {
+                isTeacherAuthenticated = true;
+                closePasswordModal();
+                performSwitchView('teacher');
+            } else {
+                showToast('비밀번호가 일치하지 않습니다.', 'error');
+            }
+        }
+
         window.switchView = function(view) {
+            if (view === 'teacher' && !isTeacherAuthenticated) {
+                // 선생님 탭을 눌렀고 아직 인증되지 않았다면 모달 띄우기
+                const modal = document.getElementById('password-modal');
+                const content = document.getElementById('password-modal-content');
+                
+                modal.classList.remove('hidden');
+                void modal.offsetWidth; // Trigger reflow
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                
+                // 엔터키 입력 지원
+                setTimeout(() => { document.getElementById('teacher-password-input').focus(); }, 100);
+                document.getElementById('teacher-password-input').onkeyup = function(e) {
+                    if (e.key === 'Enter') checkPassword();
+                };
+                return;
+            }
+            performSwitchView(view);
+        }
+
+        window.performSwitchView = function(view) {
             const studentView = document.getElementById('view-student');
             const teacherView = document.getElementById('view-teacher');
             const navStudent = document.getElementById('nav-student');
