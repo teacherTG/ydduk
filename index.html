@@ -3,397 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>엽떡 학급 주문서</title>
+    <title>엽떡 학급 주문 앱</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        yup: {
+                            light: '#ff7676',
+                            DEFAULT: '#e53935',
+                            dark: '#b71c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #e62e2e;
-            --primary-dark: #cc0000;
-            --bg-color: #f5f6f8;
-            --card-bg: #ffffff;
-            --text-main: #333333;
-            --text-sub: #888888;
-            --border: #eaeaea;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding-bottom: 120px; /* 장바구니 바 공간 확보 */
-        }
-
-        .header {
-            background-color: var(--primary);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(230, 46, 46, 0.2);
-        }
-        .header h1 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;}
-        .tab-group {
-            display: flex;
-            background: rgba(255,255,255,0.2);
-            border-radius: 20px;
-            overflow: hidden;
-            padding: 3px;
-        }
-        .tab-btn {
-            padding: 6px 12px;
-            border: none;
-            background: none;
-            color: white;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border-radius: 17px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
-        .section-title { font-size: 1.1rem; margin-bottom: 15px; font-weight: 800; display: flex; align-items: center; gap: 5px;}
-        .section-desc { font-size: 0.85rem; color: var(--text-sub); margin-top: -10px; margin-bottom: 15px;}
-
-        .student-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-            gap: 10px;
-            margin-bottom: 25px;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        }
-        .student-btn {
-            background: #f8f9fa;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 0;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .student-btn:hover:not(.disabled) {
-            background: #ffeeee;
-            border-color: #ffcccc;
-        }
-        .student-btn.selected {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 4px 8px rgba(230, 46, 46, 0.2);
-            transform: translateY(-2px);
-        }
-        .student-btn.disabled {
-            background: #e9ecef;
-            color: #adb5bd;
-            cursor: not-allowed;
-            border-color: #e9ecef;
-        }
-
-        .leader-selection {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            border: 1px solid var(--border);
-        }
-        .leader-btns { display: flex; flex-wrap: wrap; gap: 8px;}
-        .leader-btn {
-            padding: 10px 18px;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            background: #f8f9fa;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .leader-btn.active {
-            background: #fff0f0;
-            border-color: var(--primary);
-            color: var(--primary);
-            font-weight: 800;
-            box-shadow: 0 2px 5px rgba(230, 46, 46, 0.1);
-        }
-
-        .menu-card {
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            border: 1px solid var(--border);
-        }
-        .menu-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .menu-title { font-size: 1.15rem; font-weight: 800; }
-        .menu-category {
-            font-size: 0.75rem;
-            background: #f1f3f5;
-            padding: 4px 8px;
-            border-radius: 6px;
-            color: #495057;
-            font-weight: bold;
-        }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f9fafb; }
         
-        .spicy-select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ffcccc;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-family: inherit;
-            outline: none;
-            background: #fffafa;
-            color: var(--primary-dark);
-            font-weight: 600;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #e53935; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b71c1c; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
         }
 
-        .menu-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-top: 1px solid #f1f3f5;
-            padding-top: 15px;
+        /* Toast Animation */
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-        .menu-price-wrap { display: flex; flex-direction: column; }
-        .base-price { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 4px; }
-        .menu-price { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
-        
-        .qty-control {
-            display: flex;
-            align-items: center;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            padding: 2px;
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
-        .qty-btn {
-            background: white;
-            border: none;
-            width: 34px;
-            height: 34px;
-            font-size: 1.2rem;
-            border-radius: 8px;
-            cursor: pointer;
-            color: #495057;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .qty-btn:active { background: #e9ecef; }
-        .qty-display {
-            width: 36px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.1rem;
-        }
-
-        .cart-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: white;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-            padding: 15px 20px 25px 20px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 90;
-            border-top: 1px solid var(--border);
-        }
-        .cart-info { display: flex; flex-direction: column; }
-        .cart-label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; margin-bottom: 2px;}
-        .cart-qty-badge { color: var(--primary); font-weight: 800;}
-        .cart-total-price { font-size: 1.5rem; font-weight: 900; color: var(--primary); }
-        .submit-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 12px;
-            font-size: 1.05rem;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(230, 46, 46, 0.3);
-            transition: background 0.2s;
-        }
-        .submit-btn:hover { background: var(--primary-dark); }
-
-        .teacher-view { display: none; }
-        .class-total-box {
-            background: linear-gradient(135deg, var(--primary), #ff6b6b);
-            color: white;
-            padding: 25px 20px;
-            border-radius: 16px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(230, 46, 46, 0.2);
-        }
-        .class-total-box h2 { margin: 0 0 10px 0; font-size: 1rem; opacity: 0.9; }
-        .class-total-box h1 { margin: 0; font-size: 2.2rem; font-weight: 900; }
-        
-        .order-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-left: 5px solid var(--primary);
-        }
-        .order-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;}
-        .order-group-name { font-size: 1.2rem; font-weight: 900; color: var(--primary-dark); }
-        .order-members { font-size: 0.85rem; color: var(--text-sub); background: #f8f9fa; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 15px;}
-        .order-item { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 8px;}
-        .order-item:last-child { border-bottom: none; }
-        .order-total { font-weight: 900; text-align: right; font-size: 1.2rem; color: var(--primary); margin-top: 10px; padding-top: 10px; border-top: 2px solid #f1f3f5;}
-        
-        .reset-btn {
-            background: white; color: #dc3545; border: 1px solid #dc3545; padding: 12px; width: 100%;
-            border-radius: 10px; margin-top: 30px; cursor: pointer; font-weight: bold; font-size: 1rem;
-        }
-
         .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            animation: slideInUp 0.3s ease-out forwards;
         }
-        .toast.show { opacity: 1; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2000; display: none;
-            justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        .toast.hide {
+            animation: fadeOut 0.3s ease-out forwards;
         }
-        .modal-box {
-            background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 320px;
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        
+        /* 카테고리 탭 스크롤 숨김 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-        .modal-msg { font-size: 1.05rem; font-weight: bold; line-height: 1.5; margin-bottom: 25px; color: #333;}
-        .modal-btns { display: flex; gap: 10px; }
-        .modal-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 1rem;}
-        .btn-cancel { background: #e9ecef; color: #495057; }
-        .btn-confirm { background: var(--primary); color: white; }
-
-        #loading {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: white; z-index: 3000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; font-weight: bold; color: var(--primary);
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary);
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <div id="loading">
-        <div class="spinner"></div>
-        <div>서버와 연결 중입니다...</div>
-    </div>
+<body class="text-gray-800 min-h-screen flex flex-col pb-24 md:pb-0">
 
-    <div id="toast" class="toast">메시지</div>
-    
-    <div id="modal" class="modal-overlay">
-        <div class="modal-box">
-            <div id="modal-msg" class="modal-msg">확인 메시지</div>
-            <div class="modal-btns">
-                <button class="modal-btn btn-cancel" onclick="closeConfirm()">취소</button>
-                <button class="modal-btn btn-confirm" id="modal-confirm-btn">확인</button>
+    <!-- Header -->
+    <header class="bg-yup text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-pepper-hot"></i> 학급 엽떡 주문서
+            </h1>
+            <div class="flex bg-yup-dark rounded-lg p-1 overflow-hidden">
+                <button id="nav-student" class="px-4 py-1.5 md:px-6 md:py-2 text-sm md:text-base font-semibold rounded-md bg-white text-yup transition-colors" onclick="switchView('student')">
+                    학생 (주문)
+                </button>
+                <button id="nav-teacher" class="px-4 py-1.5 md:px-6 md:py-2 text-sm md:text-base font-semibold rounded-md text-white hover:bg-white/20 transition-colors" onclick="switchView('teacher')">
+                    교사 (확인)
+                </button>
             </div>
-        </div>
-    </div>
-
-    <header class="header">
-        <h1>🌶️ 학급 엽떡 주문서</h1>
-        <div class="tab-group">
-            <button class="tab-btn active" onclick="window.switchTab('student')">학생(주문)</button>
-            <button class="tab-btn" onclick="window.switchTab('teacher')">교사(확인)</button>
         </div>
     </header>
 
-    <div id="student-view" class="container">
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-6 relative">
         
-        <!-- 1. 조원 선택 -->
-        <div class="section-title">1. 우리 조 학생 번호 선택</div>
-        <div class="section-desc">우리 조에 속한 번호를 모두 눌러주세요. (다중 선택)</div>
-        <div id="student-grid" class="student-grid"></div>
+        <!-- ================= STUDENT VIEW ================= -->
+        <div id="view-student" class="space-y-6 block">
+            
+            <!-- Student Selector -->
+            <div class="glass-panel p-5 rounded-2xl">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">1. 우리 조 학생 선택</label>
+                    <p class="text-xs text-gray-500 mb-3">우리 조 학생들의 번호를 모두 골라주세요. 이미 완료한 조의 번호는 회색으로 잠깁니다.</p>
+                    <div id="student-grid" class="grid grid-cols-5 md:grid-cols-7 gap-2">
+                        <!-- Student buttons will be rendered here -->
+                    </div>
+                </div>
+                <div id="leader-selection" class="hidden border-t border-gray-100 pt-4 mt-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">2. 조장 체크 👑</label>
+                    <p class="text-xs text-gray-500 mb-3">누가 조장인지 체크해주세요. (조장 번호가 우리 조 이름이 됩니다)</p>
+                    <div id="leader-grid" class="flex flex-wrap gap-2">
+                        <!-- Leader buttons will be rendered here -->
+                    </div>
+                </div>
+            </div>
 
-        <!-- 2. 조장 선택 -->
-        <div id="leader-selection" class="leader-selection">
-            <div class="section-title">2. 주문할 조장 선택 (👑)</div>
-            <div class="section-desc">누구의 이름으로 주문할까요? 조장을 선택하세요.</div>
-            <div id="leader-btns" class="leader-btns"></div>
+            <!-- Menu Category Tabs -->
+            <div class="flex overflow-x-auto whitespace-nowrap border-b border-gray-200 pb-2 gap-4 hide-scrollbar" id="category-tabs">
+                <!-- Tabs will be rendered here -->
+            </div>
+
+            <!-- Menu Grid -->
+            <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-32">
+                <!-- Menu items will be rendered here -->
+            </div>
+
+            <!-- Floating Cart / Bottom Bar for Mobile -->
+            <div class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-30 border-t border-gray-200 md:bottom-6 md:left-auto md:right-6 md:w-96 md:rounded-2xl md:border md:shadow-2xl transition-transform duration-300">
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-3 cursor-pointer md:cursor-default" onclick="toggleMobileCart()">
+                        <h3 class="font-bold text-lg"><i class="fa-solid fa-cart-shopping text-yup mr-2"></i>우리 조 장바구니</h3>
+                        <span id="cart-item-count" class="bg-yup text-white text-xs font-bold px-2 py-1 rounded-full">0</span>
+                    </div>
+                    
+                    <!-- Cart Items Container -->
+                    <div id="cart-items" class="hidden md:block max-h-48 overflow-y-auto mb-4 space-y-2 pr-2">
+                        <div class="text-center text-gray-400 py-4 text-sm" id="empty-cart-msg">담은 메뉴가 없습니다.</div>
+                    </div>
+
+                    <div class="flex justify-between items-end border-t border-gray-100 pt-3 mb-4">
+                        <span class="text-sm text-gray-500 font-medium">총 주문 금액</span>
+                        <span class="text-2xl font-black text-yup" id="cart-total-price">0원</span>
+                    </div>
+                    
+                    <button onclick="submitOrder()" class="w-full bg-yup hover:bg-yup-dark text-white font-bold py-3.5 rounded-xl transition-colors shadow-md flex justify-center items-center gap-2 text-lg">
+                        <i class="fa-solid fa-paper-plane"></i> 선생님께 주문 전송
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- 3. 메뉴 선택 -->
-        <div class="section-title">3. 메뉴 선택</div>
-        <div class="section-desc">원하는 메뉴와 맵기를 고르고 수량을 선택하세요.</div>
-        <div id="menu-list"></div>
-    </div>
+        <!-- ================= TEACHER VIEW ================= -->
+        <div id="view-teacher" class="space-y-6 hidden">
+            
+            <!-- Dashboard Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">학급 주문 현황</h2>
+                    <p class="text-gray-500 mt-1" id="order-count-text">현재 0개의 조가 주문을 완료했습니다.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500 font-medium mb-1">학급 총 결제 예정 금액</p>
+                    <p class="text-3xl font-black text-yup" id="grand-total-price">0원</p>
+                </div>
+            </div>
 
-    <div id="cart-bar" class="cart-bar">
-        <div class="cart-info">
-            <span class="cart-label">총 주문 금액 <span id="cart-qty" class="cart-qty-badge">(0개)</span></span>
-            <div class="cart-total-price" id="cart-total">0원</div>
-        </div>
-        <button class="submit-btn" onclick="window.submitOrder()">선생님께 전송 🚀</button>
-    </div>
+            <!-- Orders Grid -->
+            <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Orders will be rendered here -->
+            </div>
 
-    <div id="teacher-view" class="container teacher-view">
-        <div class="class-total-box">
-            <h2>학급 전체 주문 총액</h2>
-            <h1 id="class-total-price">0원</h1>
+            <!-- Reset Button for Teacher -->
+            <div class="text-right mt-10">
+                <button onclick="clearAllOrders()" class="text-sm text-red-500 hover:text-red-700 underline decoration-red-500 underline-offset-4">
+                    <i class="fa-solid fa-trash-can mr-1"></i>모든 주문 기록 초기화
+                </button>
+            </div>
         </div>
-        
-        <div class="section-title" style="justify-content: space-between;">
-            각 조별 주문 내역
-            <span id="order-count" style="font-size:0.85rem; color:var(--text-sub); font-weight:normal;">0개 조 완료</span>
-        </div>
-        <div id="order-list"></div>
-        
-        <button class="reset-btn" onclick="window.triggerReset()">전체 주문 초기화 (새로 시작)</button>
-    </div>
 
+    </main>
+
+    <!-- Custom Modal/Toast Container -->
+    <div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 w-[90%] max-w-sm"></div>
+
+    <!-- Firebase & JS Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, getDocs, doc } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 선생님의 Firebase 설정 (그대로 유지)
+        // 선생님이 발급받으신 Firebase 설정 키 완벽 적용!
         const firebaseConfig = {
             apiKey: "AIzaSyDG9ibJTQ-rXQHjr3ZMJByuKSdOO3eLjPM",
             authDomain: "ydduk-99aae.firebaseapp.com",
@@ -404,321 +199,557 @@
             measurementId: "G-7RFM7X23GR"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        const appId = 'yupdduk-class-app';
+        let app, auth, db;
 
-        function showMessage(msg) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 2500);
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase 초기화 에러:", e);
         }
+        
+        let currentUser = null;
+        let unsubscribeOrders = null;
 
-        let confirmCallback = null;
-        window.showConfirm = function(msg, callback) {
-            document.getElementById('modal-msg').innerText = msg;
-            document.getElementById('modal').style.display = 'flex';
-            confirmCallback = callback;
-        }
-        window.closeConfirm = function() {
-            document.getElementById('modal').style.display = 'none';
-            confirmCallback = null;
-        }
-        document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-            if(confirmCallback) confirmCallback();
-            window.closeConfirm();
-        });
-
-        const totalStudents = 26; 
-        let mySelectedStudents = []; 
-        let myLeader = null; 
-        let globalOrderedStudents = []; 
-        let cart = {}; 
-
-        const spicyOptionsAll = ["더착한맛", "착한맛", "초보맛", "덜매운맛", "오리지널", "매운맛"];
-        const spicyOptionsMara = ["착한맛", "오리지널"];
-
-        const menuData = [
-            { id: 1, name: "엽기떡볶이", category: "메인", price: 14000, options: spicyOptionsAll },
-            { id: 2, name: "로제떡볶이", category: "메인", price: 16000, options: spicyOptionsAll },
-            { id: 3, name: "마라떡볶이", category: "메인", price: 16000, options: spicyOptionsMara },
-            { id: 4, name: "마라로제떡볶이", category: "메인", price: 18000, options: spicyOptionsMara },
-            { id: 5, name: "2인 엽기떡볶이", category: "메인", price: 9000, options: spicyOptionsAll },
-            { id: 6, name: "실속세트", category: "세트", price: 17500, options: spicyOptionsAll },
-            { id: 7, name: "베스트세트", category: "세트", price: 20000, options: spicyOptionsAll },
-            { id: 8, name: "모둠튀김", category: "사이드", price: 2000, options: null },
-            { id: 9, name: "참치마요밥", category: "사이드", price: 3500, options: null },
-            { id: 10, name: "셀프주먹구이", category: "사이드", price: 2000, options: null },
-            { id: 11, name: "쿨피스 (450ml)", category: "음료", price: 1000, options: null }
+        // Data Definition (더착한맛 추가, 사진 제거, 카테고리 유지)
+        const MENU_DATA = [
+            // 메인 메뉴
+            { id: 'm1', category: '메인', name: '엽기떡볶이', price: 14000, spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            { id: 'm2', category: '메인', name: '로제떡볶이', price: 16000, spicy: ['착한맛', '오리지널'] },
+            { id: 'm3', category: '메인', name: '마라떡볶이', price: 16000, spicy: ['착한맛', '오리지널'] },
+            { id: 'm4', category: '메인', name: '마라로제떡볶이', price: 18000, spicy: ['착한맛', '오리지널'] },
+            { id: 'm5', category: '메인', name: '2인 엽기떡볶이', price: 9000, spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            
+            // 세트 메뉴
+            { id: 's1', category: '세트', name: '실속세트', price: 17500, desc: '엽떡+주먹김밥+모둠튀김', spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            { id: 's2', category: '세트', name: '베스트세트', price: 20000, desc: '실속세트+중국당면', spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            { id: 's3', category: '세트', name: '스페셜세트', price: 25000, desc: '베스트세트+엽봉', spicy: ['더착한맛', '착한맛', '초보맛', '덜매운맛', '오리지널', '매운맛'] },
+            
+            // 사이드
+            { id: 'sd1', category: '사이드', name: '주먹김밥(셀프)', price: 2000 },
+            { id: 'sd2', category: '사이드', name: '참치마요밥', price: 3500 },
+            { id: 'sd3', category: '사이드', name: '계란찜', price: 2000 },
+            { id: 'sd4', category: '사이드', name: '모둠튀김', price: 2000 },
+            { id: 'sd5', category: '사이드', name: '꿔바로우(5개)', price: 5900 },
+            { id: 'sd6', category: '사이드', name: '엽도그', price: 2000 },
+            
+            // 토핑
+            { id: 't1', category: '토핑', name: '모짜치즈', price: 3000 },
+            { id: 't2', category: '토핑', name: '중국당면', price: 2500 },
+            { id: 't3', category: '토핑', name: '우동사리', price: 2000 },
+            { id: 't4', category: '토핑', name: '베이컨', price: 3000 },
+            { id: 't5', category: '토핑', name: '우삼겹', price: 3000 },
+            { id: 't6', category: '토핑', name: '햄(7개)', price: 1000 },
+            { id: 't7', category: '토핑', name: '메추리알(5개)', price: 1000 }
         ];
 
-        async function initApp() {
-            try {
-                await signInAnonymously(auth);
-                listenToOrders();
-                renderMenu();
-                document.getElementById('loading').style.display = 'none';
-            } catch (error) {
-                console.error("Firebase 초기화 에러:", error);
-                showMessage("서버 연결에 실패했습니다. 새로고침 해주세요.");
-                document.getElementById('loading').innerHTML = "연결 실패. 설정을 확인하세요.";
-            }
-        }
+        const CATEGORIES = ['전체', '메인', '세트', '사이드', '토핑'];
+        let activeCategory = '전체';
+        
+        // 상태 관리
+        let cart = {}; 
+        let selectedSpicy = {}; 
+        let allOrders = []; 
+        let selectedStudents = [];
+        let groupLeader = null;
+        let takenStudents = [];
 
-        function renderStudents() {
-            const grid = document.getElementById('student-grid');
-            grid.innerHTML = '';
-            for (let i = 1; i <= totalStudents; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'student-btn';
-                btn.innerText = i;
-                
-                if (globalOrderedStudents.includes(i.toString())) {
-                    btn.classList.add('disabled');
-                } else if (mySelectedStudents.includes(i.toString())) {
-                    btn.classList.add('selected');
-                }
-                
-                btn.onclick = () => toggleStudent(i.toString());
-                grid.appendChild(btn);
-            }
-            updateLeaderSelection();
-        }
-
-        function toggleStudent(num) {
-            if (mySelectedStudents.includes(num)) {
-                mySelectedStudents = mySelectedStudents.filter(n => n !== num);
-                if (myLeader === num) myLeader = null;
-            } else {
-                mySelectedStudents.push(num);
-                mySelectedStudents.sort((a,b) => a - b);
-            }
-            renderStudents();
-        }
-
-        function updateLeaderSelection() {
-            const leaderDiv = document.getElementById('leader-selection');
-            const leaderBtns = document.getElementById('leader-btns');
+        // --- 1. 학생 및 조장 선택 기능 ---
+        function renderStudentSelector() {
+            const studentGrid = document.getElementById('student-grid');
+            const leaderSelection = document.getElementById('leader-selection');
+            const leaderGrid = document.getElementById('leader-grid');
             
-            if (mySelectedStudents.length > 0) {
-                leaderDiv.style.display = 'block';
-                leaderBtns.innerHTML = '';
-                mySelectedStudents.forEach(num => {
-                    const btn = document.createElement('button');
-                    btn.className = `leader-btn ${myLeader === num ? 'active' : ''}`;
-                    btn.innerText = `${num}번`;
-                    btn.onclick = () => {
-                        myLeader = num;
-                        updateLeaderSelection();
-                    };
-                    leaderBtns.appendChild(btn);
-                });
-            } else {
-                leaderDiv.style.display = 'none';
-                myLeader = null;
+            if(!studentGrid) return;
+
+            let studentHtml = '';
+            for(let i=1; i<=26; i++) {
+                const isTaken = takenStudents.includes(i);
+                const isSelected = selectedStudents.includes(i);
+                
+                let btnClass = "py-2 rounded-lg font-bold text-sm transition-all duration-200 border ";
+                if (isTaken) {
+                    btnClass += "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed line-through";
+                } else if (isSelected) {
+                    btnClass += "bg-red-50 text-yup border-yup shadow-sm";
+                } else {
+                    btnClass += "bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400";
+                }
+
+                studentHtml += `<button onclick="toggleStudent(${i})" class="${btnClass}" ${isTaken ? 'disabled' : ''}>
+                    ${i}
+                </button>`;
             }
+            studentGrid.innerHTML = studentHtml;
+
+            // 조장 선택 UI
+            if (selectedStudents.length > 0) {
+                leaderSelection.classList.remove('hidden');
+                let leaderHtml = '';
+                selectedStudents.sort((a, b) => a - b).forEach(num => {
+                    const isLeader = groupLeader === num;
+                    leaderHtml += `<button onclick="setLeader(${num})" class="px-4 py-2 rounded-full font-bold text-sm transition-all duration-200 border ${isLeader ? 'bg-yup text-white border-yup shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}">
+                        ${num}번 ${isLeader ? '👑' : ''}
+                    </button>`;
+                });
+                leaderGrid.innerHTML = leaderHtml;
+            } else {
+                leaderSelection.classList.add('hidden');
+            }
+        }
+
+        window.toggleStudent = function(num) {
+            if (selectedStudents.includes(num)) {
+                selectedStudents = selectedStudents.filter(n => n !== num);
+                if (groupLeader === num) groupLeader = selectedStudents.length > 0 ? selectedStudents[0] : null;
+            } else {
+                selectedStudents.push(num);
+                if (!groupLeader) groupLeader = num;
+            }
+            renderStudentSelector();
+        }
+
+        window.setLeader = function(num) {
+            groupLeader = num;
+            renderStudentSelector();
+        }
+
+        // --- 유틸리티 및 UI ---
+        function formatPrice(price) {
+            return price.toLocaleString() + '원';
+        }
+
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-gray-800');
+            const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+            
+            toast.className = `toast ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.switchView = function(view) {
+            const studentView = document.getElementById('view-student');
+            const teacherView = document.getElementById('view-teacher');
+            const navStudent = document.getElementById('nav-student');
+            const navTeacher = document.getElementById('nav-teacher');
+
+            if(view === 'student') {
+                studentView.classList.remove('hidden');
+                studentView.classList.add('block');
+                teacherView.classList.remove('block');
+                teacherView.classList.add('hidden');
+                
+                navStudent.classList.replace('text-white', 'text-yup');
+                navStudent.classList.replace('hover:bg-white/20', 'bg-white');
+                navTeacher.classList.replace('text-yup', 'text-white');
+                navTeacher.classList.replace('bg-white', 'hover:bg-white/20');
+            } else {
+                studentView.classList.remove('block');
+                studentView.classList.add('hidden');
+                teacherView.classList.remove('hidden');
+                teacherView.classList.add('block');
+                
+                navTeacher.classList.replace('text-white', 'text-yup');
+                navTeacher.classList.replace('hover:bg-white/20', 'bg-white');
+                navStudent.classList.replace('text-yup', 'text-white');
+                navStudent.classList.replace('bg-white', 'hover:bg-white/20');
+            }
+        }
+
+        window.toggleMobileCart = function() {
+            if(window.innerWidth >= 768) return; 
+            const cartItems = document.getElementById('cart-items');
+            cartItems.classList.toggle('hidden');
+        }
+
+        // --- 메뉴 렌더링 및 카트 로직 ---
+        function renderCategoryTabs() {
+            const container = document.getElementById('category-tabs');
+            container.innerHTML = '';
+            
+            CATEGORIES.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `px-5 py-2 rounded-full text-sm font-semibold transition-colors ${activeCategory === cat ? 'bg-yup text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`;
+                btn.innerText = cat;
+                btn.onclick = () => {
+                    activeCategory = cat;
+                    renderCategoryTabs();
+                    renderMenu();
+                };
+                container.appendChild(btn);
+            });
         }
 
         function renderMenu() {
-            const list = document.getElementById('menu-list');
-            list.innerHTML = '';
+            const container = document.getElementById('menu-grid');
+            container.innerHTML = '';
+            
+            const filteredMenu = activeCategory === '전체' 
+                ? MENU_DATA 
+                : MENU_DATA.filter(item => item.category === activeCategory);
 
-            menuData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'menu-card';
+            filteredMenu.forEach(item => {
+                // 특정 메뉴의 총 담긴 갯수 계산 (맵기 상관없이 합산)
+                let itemTotalQty = 0;
+                Object.keys(cart).forEach(k => {
+                    if (k === item.id || k.startsWith(item.id + '::')) {
+                        itemTotalQty += cart[k];
+                    }
+                });
+                
+                // 담긴 갯수가 있으면 (가격 * 갯수)로 표시, 없으면 (가격 * 1) 기본 가격 표시
+                const itemTotal = item.price * (itemTotalQty > 0 ? itemTotalQty : 1);
                 
                 let spicyHtml = '';
-                if (item.options) {
-                    spicyHtml = `<select id="spicy-${item.id}" class="spicy-select">`;
-                    item.options.forEach(opt => {
-                        spicyHtml += `<option value="${opt}">${opt}</option>`;
-                    });
-                    spicyHtml += `</select>`;
-                }
-
-                card.innerHTML = `
-                    <div class="menu-header">
-                        <div class="menu-title">${item.name}</div>
-                        <div class="menu-category">${item.category}</div>
-                    </div>
-                    ${spicyHtml}
-                    <div class="menu-footer">
-                        <div class="menu-price-wrap">
-                            <span class="base-price">기본 단가: ${item.price.toLocaleString()}원</span>
-                            <div class="menu-price" id="price-display-${item.id}">${item.price.toLocaleString()}원</div>
+                if (item.spicy) {
+                    if (!selectedSpicy[item.id]) selectedSpicy[item.id] = item.spicy[0]; 
+                    let options = item.spicy.map(opt => 
+                        `<option value="${opt}" ${selectedSpicy[item.id] === opt ? 'selected' : ''}>${opt}</option>`
+                    ).join('');
+                    spicyHtml = `
+                        <div class="mt-2 mb-1">
+                            <select onchange="changeSpicy('${item.id}', this.value)" class="w-full bg-red-50 border border-red-100 text-yup-dark text-sm rounded-lg focus:ring-yup focus:border-yup block p-2 font-medium outline-none">
+                                ${options}
+                            </select>
                         </div>
-                        <div class="qty-control">
-                            <button class="qty-btn" onclick="window.updateQty(${item.id}, -1)">−</button>
-                            <div class="qty-display" id="qty-${item.id}">0</div>
-                            <button class="qty-btn" onclick="window.updateQty(${item.id}, 1)">+</button>
+                    `;
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 p-5 flex flex-col justify-between border border-gray-200 bg-white';
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg text-gray-800 leading-tight">${item.name}</h3>
+                            <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-md">${item.category}</span>
+                        </div>
+                        ${item.desc ? `<p class="text-sm text-gray-500 mb-2">${item.desc}</p>` : ''}
+                        ${spicyHtml}
+                    </div>
+                    <div class="mt-4 flex justify-between items-end border-t border-gray-100 pt-4">
+                        <div class="flex flex-col">
+                            <span class="text-xs text-gray-400 font-medium">기본 단가: ${formatPrice(item.price)}</span>
+                            <span class="font-black text-yup text-xl mt-1">${formatPrice(itemTotal)}</span>
+                        </div>
+                        
+                        <div class="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200 shadow-sm">
+                            <button onclick="updateCartFromMenu('${item.id}', -1)" class="w-9 h-9 rounded-lg bg-white shadow-sm text-gray-600 hover:text-yup hover:bg-red-50 transition-colors flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-minus text-sm"></i>
+                            </button>
+                            <span class="w-10 text-center font-black text-gray-800 text-lg">${itemTotalQty}</span>
+                            <button onclick="updateCartFromMenu('${item.id}', 1)" class="w-9 h-9 rounded-lg bg-white shadow-sm text-gray-600 hover:text-yup hover:bg-red-50 transition-colors flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-plus text-sm"></i>
+                            </button>
                         </div>
                     </div>
                 `;
-                list.appendChild(card);
+                container.appendChild(card);
             });
         }
 
-        window.updateQty = (itemId, change) => {
-            const item = menuData.find(m => m.id === itemId);
-            let spicyLevel = "";
-            
-            if (item.options) {
-                const selectBox = document.getElementById(`spicy-${itemId}`);
-                spicyLevel = selectBox.value;
-            }
-            
-            const cartKey = `${itemId}_${spicyLevel}`;
-            
-            if (!cart[cartKey]) cart[cartKey] = { item: item, spicy: spicyLevel, qty: 0 };
-            cart[cartKey].qty += change;
-            
-            if (cart[cartKey].qty <= 0) delete cart[cartKey];
-
-            // 특정 메뉴의 모든 맵기 수량을 더해 카드에 표시
-            let totalQtyForCard = 0;
-            for (let key in cart) {
-                if (cart[key].item.id === itemId) totalQtyForCard += cart[key].qty;
-            }
-            
-            document.getElementById(`qty-${itemId}`).innerText = totalQtyForCard;
-            document.getElementById(`price-display-${itemId}`).innerText = 
-                (item.price * (totalQtyForCard > 0 ? totalQtyForCard : 1)).toLocaleString() + "원";
-
-            updateCartUI();
-        };
-
-        function updateCartUI() {
-            let totalItems = 0;
-            let totalPrice = 0;
-
-            for (let key in cart) {
-                totalItems += cart[key].qty;
-                totalPrice += (cart[key].item.price * cart[key].qty);
-            }
-
-            document.getElementById('cart-qty').innerText = `(${totalItems}개)`;
-            document.getElementById('cart-total').innerText = `${totalPrice.toLocaleString()}원`;
+        window.changeSpicy = function(itemId, value) {
+            selectedSpicy[itemId] = value;
         }
 
-        window.submitOrder = async () => {
-            if (mySelectedStudents.length === 0) return showMessage("우리 조 학생 번호를 먼저 선택해주세요!");
-            if (!myLeader) return showMessage("조장을 선택해주세요!");
-            if (Object.keys(cart).length === 0) return showMessage("메뉴를 1개 이상 담아주세요!");
-
-            let orderItems = [];
-            let totalGroupPrice = 0;
-            for (let key in cart) {
-                const c = cart[key];
-                orderItems.push({
-                    name: c.item.name,
-                    spicy: c.spicy,
-                    qty: c.qty,
-                    price: c.item.price * c.qty
-                });
-                totalGroupPrice += (c.item.price * c.qty);
+        window.updateCartFromMenu = function(itemId, change) {
+            const item = MENU_DATA.find(m => m.id === itemId);
+            let cartKey = itemId;
+            
+            if (item && item.spicy) {
+                const spicyValue = selectedSpicy[itemId] || item.spicy[0];
+                cartKey = `${itemId}::${spicyValue}`;
+            }
+            
+            if (change < 0 && (!cart[cartKey] || cart[cartKey] === 0)) {
+                const availableKey = Object.keys(cart).find(k => k.startsWith(itemId + '::') && cart[k] > 0);
+                if (availableKey) cartKey = availableKey;
             }
 
+            updateCart(cartKey, change);
+        }
+
+        window.updateCart = function(cartKey, change) {
+            const currentQty = Number(cart[cartKey]) || 0;
+            const newQty = currentQty + Number(change);
+            
+            if (newQty > 0) {
+                cart[cartKey] = newQty;
+            } else {
+                delete cart[cartKey];
+            }
+            
+            renderMenu(); 
+            renderCart(); 
+        }
+
+        function renderCart() {
+            const cartContainer = document.getElementById('cart-items');
+            const countBadge = document.getElementById('cart-item-count');
+            const totalEl = document.getElementById('cart-total-price');
+            
+            let total = 0;
+            let itemCount = 0;
+            let html = '';
+
+            const cartKeys = Object.keys(cart);
+            
+            if (cartKeys.length === 0) {
+                html = '<div class="text-center text-gray-400 py-4 text-sm" id="empty-cart-msg">담은 메뉴가 없습니다.</div>';
+            } else {
+                cartKeys.forEach(cartKey => {
+                    const [id, spicyOption] = cartKey.split('::');
+                    const item = MENU_DATA.find(m => m.id === id);
+                    
+                    if (item) { 
+                        const qty = Number(cart[cartKey]); 
+                        const itemTotal = item.price * qty; 
+                        total += itemTotal; 
+                        itemCount += qty; 
+
+                        html += `
+                            <div class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-gray-700">${item.name} ${spicyOption ? `<span class="text-yup text-xs font-bold ml-1">[${spicyOption}]</span>` : ''}</span>
+                                    <span class="text-xs text-gray-500">${formatPrice(item.price)} x ${qty}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="font-bold text-gray-800">${formatPrice(itemTotal)}</span>
+                                    <button onclick="updateCart('${cartKey}', -${qty})" class="text-red-400 hover:text-red-600 transition-colors">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            cartContainer.innerHTML = html;
+            countBadge.innerText = itemCount;
+            totalEl.innerText = formatPrice(total);
+        }
+        
+        window.submitOrder = async function() {
+            if (!currentUser) return showToast('서버 연결 중입니다. 잠시만 기다려주세요.', 'error');
+            if (selectedStudents.length === 0) return showToast('우리 조 학생을 먼저 선택해주세요.', 'error');
+            if (!groupLeader) return showToast('조장을 체크해주세요.', 'error');
+
+            const cartKeys = Object.keys(cart);
+            if (cartKeys.length === 0) return showToast('장바구니가 비어있습니다. 메뉴를 선택해주세요.', 'error');
+
+            let totalPrice = 0;
+            const items = cartKeys.map(cartKey => {
+                const [id, spicyOption] = cartKey.split('::');
+                const item = MENU_DATA.find(m => m.id === id);
+                const qty = cart[cartKey];
+                totalPrice += item.price * qty;
+                return {
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: qty,
+                    category: item.category,
+                    spicy: spicyOption || null
+                };
+            });
+
+            const groupName = `${groupLeader}번 조`;
+
             const orderData = {
-                leader: myLeader,
-                members: mySelectedStudents,
-                items: orderItems,
-                totalPrice: totalGroupPrice,
-                timestamp: new Date().getTime()
+                groupName: groupName,
+                leader: groupLeader,
+                members: selectedStudents,
+                items: items,
+                totalPrice: totalPrice,
+                timestamp: Date.now()
             };
 
             try {
-                await addDoc(collection(db, "orders"), orderData);
-                showMessage("주문이 선생님께 성공적으로 전송되었습니다! 🎉");
+                // Rule 1: Using Strict Path
+                const safeDocId = `order_${groupLeader}`;
+                const orderRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', safeDocId);
+                
+                await setDoc(orderRef, orderData);
+                showToast('선생님께 주문이 성공적으로 전송되었습니다!', 'success');
                 
                 // 전송 후 장바구니 초기화
                 cart = {};
-                mySelectedStudents = [];
-                myLeader = null;
-                renderMenu(); 
-                updateCartUI();
-                renderStudents();
-            } catch (error) {
-                console.error("전송 에러:", error);
-                showMessage("전송 중 오류가 발생했습니다.");
-            }
-        };
-
-        function listenToOrders() {
-            const q = query(collection(db, "orders"));
-            onSnapshot(q, (snapshot) => {
-                let classTotal = 0;
-                let usedStudents = [];
-                let orderCount = 0;
-                const orderListDiv = document.getElementById('order-list');
-                orderListDiv.innerHTML = '';
-
-                snapshot.forEach((documentSnapshot) => {
-                    const data = documentSnapshot.data();
-                    orderCount++;
-                    classTotal += data.totalPrice;
-                    usedStudents = usedStudents.concat(data.members);
-
-                    let itemsHtml = data.items.map(item => 
-                        `<div class="order-item">
-                            <span>- ${item.name} ${item.spicy ? `<strong style="color:var(--primary); font-size:0.8rem">(${item.spicy})</strong>` : ''}</span>
-                            <span>${item.qty}개 / ${(item.price).toLocaleString()}원</span>
-                        </div>`
-                    ).join('');
-
-                    orderListDiv.innerHTML += `
-                        <div class="order-card">
-                            <div class="order-header">
-                                <span class="order-group-name">👑 ${data.leader}번 조</span>
-                            </div>
-                            <div class="order-members">조원: ${data.members.join(', ')}번</div>
-                            <div>${itemsHtml}</div>
-                            <div class="order-total">조 총액: ${data.totalPrice.toLocaleString()}원</div>
-                        </div>
-                    `;
-                });
-
-                document.getElementById('class-total-price').innerText = `${classTotal.toLocaleString()}원`;
-                document.getElementById('order-count').innerText = `${orderCount}개 조 주문 완료`;
+                selectedStudents = [];
+                groupLeader = null;
+                renderCart();
+                renderMenu();
+                renderStudentSelector();
                 
-                globalOrderedStudents = usedStudents;
-                renderStudents(); 
+            } catch (error) {
+                console.error("Order submit error:", error);
+                showToast('주문 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+            }
+        }
+
+        // --- Teacher View (실시간 동기화) ---
+        function startListeningToOrders() {
+            if (!db || unsubscribeOrders) return; 
+
+            const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+            
+            unsubscribeOrders = onSnapshot(ordersCollection, (snapshot) => {
+                allOrders = [];
+                takenStudents = [];
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allOrders.push({ id: doc.id, ...data });
+                    if (data.members) takenStudents.push(...data.members);
+                });
+                
+                allOrders.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // 이미 완료된 학생이 내 선택에 있다면 해제
+                selectedStudents = selectedStudents.filter(n => !takenStudents.includes(n));
+                if (groupLeader && !selectedStudents.includes(groupLeader)) {
+                    groupLeader = selectedStudents.length > 0 ? selectedStudents[0] : null;
+                }
+                
+                renderStudentSelector();
+                renderTeacherDashboard();
+            }, (error) => {
+                console.error("Error listening to orders: ", error);
             });
         }
 
-        window.triggerReset = () => {
-            showConfirm("모든 조의 주문 내역을 영구적으로 삭제하시겠습니까?", async () => {
-                try {
-                    const querySnapshot = await getDocs(collection(db, "orders"));
-                    querySnapshot.forEach((documentSnapshot) => {
-                        deleteDoc(doc(db, "orders", documentSnapshot.id));
-                    });
-                    showMessage("모든 주문이 초기화되었습니다.");
-                } catch (error) {
-                    showMessage("초기화 중 오류가 발생했습니다.");
-                }
+        function renderTeacherDashboard() {
+            const container = document.getElementById('orders-container');
+            const countText = document.getElementById('order-count-text');
+            const grandTotalEl = document.getElementById('grand-total-price');
+            
+            container.innerHTML = '';
+            
+            if (allOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
+                        <i class="fa-solid fa-clipboard-list text-6xl mb-4 text-gray-200"></i>
+                        <p class="text-lg">아직 접수된 주문이 없습니다.</p>
+                    </div>
+                `;
+                countText.innerText = '현재 0개의 조가 주문을 완료했습니다.';
+                grandTotalEl.innerText = '0원';
+                return;
+            }
+
+            let grandTotal = 0;
+
+            allOrders.forEach(order => {
+                grandTotal += order.totalPrice;
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative overflow-hidden group';
+                
+                const dec = document.createElement('div');
+                dec.className = 'absolute top-0 left-0 w-full h-1 bg-yup';
+                card.appendChild(dec);
+
+                const timeString = new Date(order.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute:'2-digit' });
+
+                let itemsHtml = order.items.map(item => `
+                    <div class="flex justify-between items-center text-sm border-b border-gray-50 py-2 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium">${item.category}</span>
+                            <span class="font-bold text-gray-700">${item.name} ${item.spicy ? `<span class="text-yup text-xs font-normal ml-1">(${item.spicy})</span>` : ''}</span>
+                        </div>
+                        <span class="font-medium bg-red-50 text-yup px-2 py-0.5 rounded-md">${item.quantity}개</span>
+                    </div>
+                `).join('');
+
+                card.innerHTML += `
+                    <div class="flex justify-between items-end mb-2">
+                        <h3 class="text-xl font-black text-gray-800">${order.groupName}</h3>
+                        <span class="text-xs text-gray-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>${timeString}</span>
+                    </div>
+                    <div class="mb-4">
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-medium">조원: ${order.members ? order.members.map(m => m + '번').join(', ') : '알 수 없음'}</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3 mb-4 space-y-1">
+                        ${itemsHtml}
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <span class="text-sm font-bold text-gray-500">합계</span>
+                        <span class="text-xl font-black text-yup">${formatPrice(order.totalPrice)}</span>
+                    </div>
+                    <button onclick="deleteOrder('${order.id}')" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                `;
+                container.appendChild(card);
             });
-        };
 
-        window.switchTab = (tabName) => {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('student-view').style.display = 'none';
-            document.getElementById('teacher-view').style.display = 'none';
-            document.getElementById('cart-bar').style.display = 'none';
+            countText.innerText = `현재 ${allOrders.length}개의 조가 주문을 완료했습니다.`;
+            grandTotalEl.innerText = formatPrice(grandTotal);
+        }
 
-            if (tabName === 'student') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('student-view').style.display = 'block';
-                document.getElementById('cart-bar').style.display = 'flex';
-            } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('teacher-view').style.display = 'block';
+        window.deleteOrder = async function(orderId) {
+            if(confirm("이 조의 주문을 삭제하시겠습니까?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
+                    showToast("주문이 삭제되었습니다.", "success");
+                } catch(e) {
+                    showToast("삭제 실패", "error");
+                }
             }
         };
 
-        document.addEventListener("DOMContentLoaded", () => {
+        window.clearAllOrders = async function() {
+            if(confirm("정말로 모든 주문 내역을 초기화하시겠습니까? (복구 불가)")) {
+                try {
+                    const ordersCollection = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+                    const snapshot = await getDocs(ordersCollection);
+                    const deletePromises = [];
+                    snapshot.forEach(document => {
+                        deletePromises.push(deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', document.id)));
+                    });
+                    await Promise.all(deletePromises);
+                    showToast("모든 주문이 초기화되었습니다.", "success");
+                } catch (e) {
+                    showToast("초기화 중 오류가 발생했습니다.", "error");
+                }
+            }
+        }
+
+        async function initApp() {
+            renderCategoryTabs();
+            renderMenu();
+            renderCart();
+            renderStudentSelector();
+
+            try {
+                // Rule 3: Auth Before Queries
+                await signInAnonymously(auth);
+                currentUser = auth.currentUser;
+                
+                // 인증 성공 후 리스너 시작
+                startListeningToOrders();
+            } catch (error) {
+                console.error("Auth Error:", error);
+                showToast("네트워크/서버 연결이 원활하지 않습니다.", "error");
+            }
+        }
+
+        // 깃허브 배포 시 로딩 버그 완벽 해결
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
             initApp();
-        });
+        }
+
     </script>
 </body>
 </html>
